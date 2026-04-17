@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Обособленные определения и обстоятельства</title>
+  <style>
+    :root{
+      --bg1:#071120;
+      --bg2:#0b1d38;
+      --panel:rgba(12,18,32,.94);
+      --card:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.13);
+      --text:#eef6ff;
+      --muted:#a8bdd8;
+      --blue:#2388ff;
+      --green:#18c76b;
+      --yellow:#f4bf38;
+      --red:#ff5a6d;
+      --gray1:#a8b9dd;
+      --gray2:#7386b0;
+      --shadow:0 10px 35px rgba(0,0,0,.35);
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      height:100%;
+      font-family: Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1100px 650px at 18% 0%, #16325c 0%, transparent 50%),
+        radial-gradient(1000px 700px at 100% 25%, #11294d 0%, transparent 45%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
+      overflow:hidden;
+    }
+
+    .app{
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:100;
+      background:var(--panel);
+      border-bottom:1px solid var(--stroke);
+      box-shadow:var(--shadow);
+      padding:10px 14px;
+    }
+
+    .topbar-inner{
+      max-width:1400px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .top-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .buttons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .mode-btn,
+    .action-btn{
+      border:none;
+      border-radius:14px;
+      padding:11px 16px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      color:#fff;
+      transition:.15s ease;
+      box-shadow:0 0 0 1px rgba(255,255,255,.15) inset, 0 8px 20px rgba(0,0,0,.24);
+      line-height:1.15;
+      white-space:nowrap;
+    }
+
+    .mode-btn:hover,
+    .action-btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .mode-btn.blue{ background:linear-gradient(180deg, #56a8ff, var(--blue)); }
+    .mode-btn.green{ background:linear-gradient(180deg, #42e38f, var(--green)); }
+    .action-btn.yellow{ background:linear-gradient(180deg, #ffd66b, var(--yellow)); color:#10203d; }
+    .action-btn.gray{ background:linear-gradient(180deg, var(--gray1), var(--gray2)); }
+
+    .mode-btn.active{
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,.75) inset,
+        0 0 16px rgba(255,255,255,.18),
+        0 10px 24px rgba(0,0,0,.3);
+    }
+
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .stats-box{
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      padding:8px 12px;
+      min-width:104px;
+      text-align:center;
+    }
+
+    .stats-box .small{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:2px;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+      font-weight:600;
+    }
+
+    .stats-box .big{
+      font-size:20px;
+      font-weight:800;
+      line-height:1.1;
+    }
+
+    .top-message{
+      display:none;
+      width:100%;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,214,107,.45);
+      border-radius:14px;
+      padding:10px 14px;
+      font-size:17px;
+      font-weight:800;
+      color:#fff1c9;
+      text-align:center;
+      line-height:1.25;
+    }
+
+    .top-message.show{
+      display:block;
+    }
+
+    .top-message.ok{
+      border-color:rgba(66,227,143,.5);
+      color:#ddffe9;
+    }
+
+    .main{
+      flex:1;
+      min-height:0;
+      padding:14px;
+    }
+
+    .scroll{
+      max-width:1400px;
+      margin:0 auto;
+      height:100%;
+      overflow-y:auto;
+      padding-right:6px;
+    }
+
+    .scroll::-webkit-scrollbar{ width:10px; }
+    .scroll::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,.16);
+      border-radius:10px;
+    }
+
+    .hint{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+      margin:0 0 12px;
+      padding:0 4px;
+    }
+
+    .sentence{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:20px;
+      padding:18px 20px;
+      margin:0 0 16px;
+      line-height:2;
+      font-size:29px;
+      text-align:left;
+      box-shadow:var(--shadow);
+    }
+
+    .word{
+      display:inline-block;
+      padding:3px 7px;
+      margin:0 1px;
+      border-radius:10px;
+      cursor:pointer;
+      user-select:none;
+      transition:.14s ease;
+    }
+
+    .word:hover{
+      background:rgba(255,255,255,.08);
+    }
+
+    .word.done{
+      cursor:default;
+    }
+
+    .word.correct-def{
+      background:rgba(35,136,255,.23);
+      box-shadow:0 0 0 2px rgba(35,136,255,.95) inset, 0 0 12px rgba(35,136,255,.25);
+    }
+
+    .word.correct-adv{
+      background:rgba(24,199,107,.22);
+      box-shadow:0 0 0 2px rgba(24,199,107,.95) inset, 0 0 12px rgba(24,199,107,.22);
+    }
+
+    .word.wrong{
+      background:rgba(255,90,109,.18);
+      box-shadow:0 0 0 2px rgba(255,90,109,.95) inset;
+    }
+
+    .final{
+      display:none;
+      margin:24px 0 10px;
+      text-align:center;
+      font-size:24px;
+      font-weight:800;
+      color:#ffe082;
+    }
+
+    @media (max-width: 1100px){
+      .sentence{
+        font-size:24px;
+        line-height:1.9;
+      }
+    }
+
+    @media (max-width: 760px){
+      .topbar{
+        padding:10px;
+      }
+
+      .topbar-inner{
+        gap:8px;
+      }
+
+      .top-row{
+        gap:10px;
+      }
+
+      .buttons{
+        width:100%;
+        gap:8px;
+      }
+
+      .mode-btn,
+      .action-btn{
+        flex:1 1 calc(50% - 8px);
+        min-width:0;
+        font-size:14px;
+        padding:10px 12px;
+        border-radius:12px;
+        white-space:normal;
+      }
+
+      .stats{
+        width:100%;
+        justify-content:flex-start;
+      }
+
+      .stats-box{
+        flex:1 1 calc(50% - 8px);
+        min-width:0;
+        padding:8px 10px;
+      }
+
+      .stats-box .big{
+        font-size:18px;
+      }
+
+      .top-message{
+        font-size:15px;
+        padding:10px 12px;
+        border-radius:12px;
+      }
+
+      .main{
+        padding:10px;
+      }
+
+      .sentence{
+        font-size:19px;
+        line-height:1.82;
+        padding:14px 14px;
+        border-radius:16px;
+      }
+
+      .word{
+        padding:4px 6px;
+        border-radius:8px;
+        margin:1px;
+      }
+
+      .hint{
+        font-size:13px;
+      }
+
+      .final{
+        font-size:20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="top-row">
+          <div class="buttons">
+            <button id="defBtn" class="mode-btn blue active">Обособленное определение</button>
+            <button id="advBtn" class="mode-btn green">Обособленное обстоятельство</button>
+            <button id="checkBtn" class="action-btn yellow">Проверить</button>
+            <button id="homeBtn" class="action-btn gray" onclick="location.href='index.html'">На главную</button>
+          </div>
+
+          <div class="stats">
+            <div class="stats-box">
+              <span class="small">Баллы</span>
+              <span id="score" class="big">0</span>
+            </div>
+            <div class="stats-box">
+              <span class="small">Ошибки</span>
+              <span id="errors" class="big">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="topMessage" class="top-message"></div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="scroll">
+        <div class="hint">
+          Сначала выбери кнопку сверху. Потом отмечай слова по одному:
+          <b>синим</b> — обособленные определения,
+          <b>зелёным</b> — обособленные обстоятельства.
+          Когда закончишь, нажми <b>«Проверить»</b>.
+        </div>
+
+        <div id="quiz"></div>
+        <div id="final" class="final"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const data = [
+      `Дорога на перевал <узкая и извилистая> тянулась вдоль обрыва <<пугая неопытных водителей крутыми поворотами>>.`,
+      `<<Напевая под нос старинный мотив>> старушка перебирала в корзине пахнущие луговыми травами яблоки.`,
+      `Уставший за день альпинист <<тяжело дыша>> смотрел на озаренную заходящим солнцем вершину.`,
+      `Огромная туча <медленно затягивавшая горизонт и напоминавшая сказочное чудовище> заставила нас искать укрытие.`,
+      `<Оглушенный внезапным раскатом грома> он стоял на крыльце <<не решаясь сделать ни шага в сторону леса>>.`,
+      `Мы <совершенно изнуренные жарой и долгой ходьбой> присели у ручья <<жадно припадая к ледяной воде>>.`,
+      `Старый парк <заросший густым кустарником и давно заброшенный хозяевами> хранил немало тайн.`,
+      `<<Заметив в траве блестящий предмет>> мальчик нагнулся и <<подняв его>> долго рассматривал находку.`,
+      `Пропитанный солью и запахом водорослей ветер гулял по палубе корабля <<надувая паруса>>.`,
+      `Она <всегда такая спокойная и рассудительная> вдруг разрыдалась <<не пытаясь больше сдерживать свои чувства>>.`,
+      `<<Прочитав письмо несколько раз>> отец сложил его и <задумчивый и хмурый> вышел на террасу.`,
+      `Сквозь поредевшие от ветра ветки деревьев виднелось небо <усеянное мириадами мерцающих звезд>.`,
+      `<<Почувствовав опасность>> зверь замер и <<чуть приподняв голову>> начал принюхиваться к ночному воздуху.`,
+      `Величественные горы <окутанные сизым туманом> казались призрачными в свете восходящей луны.`,
+      `Ветер <<свистя в ушах и подгоняя нас в спину>> мешал разобрать произносимые шепотом слова.`,
+      `<Разочарованный результатами долгого эксперимента> он <<устало потирая глаза>> откинулся на спинку кресла.`,
+      `<<Оставив надежду найти дорогу до темноты>> путники начали собирать хворост <необходимый для костра>.`,
+      `Выставка <открывшаяся в центре города и посвященная современному искусству> вызвала много споров.`,
+      `Вечерами <<собравшись в уютной гостиной>> мы слушали рассказы деда <удивительные и захватывающие>.`
+    ];
+
+    let mode = "def";
+    let score = 0;
+    let errors = 0;
+    let totalTargets = 0;
+    let foundTargets = 0;
+
+    const defBtn = document.getElementById("defBtn");
+    const advBtn = document.getElementById("advBtn");
+    const checkBtn = document.getElementById("checkBtn");
+    const scoreEl = document.getElementById("score");
+    const errorsEl = document.getElementById("errors");
+    const quizEl = document.getElementById("quiz");
+    const finalEl = document.getElementById("final");
+    const topMessageEl = document.getElementById("topMessage");
+
+    defBtn.addEventListener("click", () => {
+      mode = "def";
+      defBtn.classList.add("active");
+      advBtn.classList.remove("active");
+    });
+
+    advBtn.addEventListener("click", () => {
+      mode = "adv";
+      advBtn.classList.add("active");
+      defBtn.classList.remove("active");
+    });
+
+    checkBtn.addEventListener("click", () => {
+      const missed = totalTargets - foundTargets;
+
+      topMessageEl.classList.add("show");
+      topMessageEl.classList.remove("ok");
+
+      if (missed === 0) {
+        topMessageEl.textContent = "Ничего не пропущено.";
+        topMessageEl.classList.add("ok");
+        finalEl.style.display = "block";
+        finalEl.textContent = `Готово! Баллы: ${score} · Ошибки: ${errors}`;
+      } else if (missed === 1) {
+        topMessageEl.textContent = "Пропущено 1 слово.";
+        finalEl.style.display = "none";
+      } else if (missed >= 2 && missed <= 4) {
+        topMessageEl.textContent = `Пропущено ${missed} слова.`;
+        finalEl.style.display = "none";
+      } else {
+        topMessageEl.textContent = `Пропущено ${missed} слов.`;
+        finalEl.style.display = "none";
+      }
+    });
+
+    function splitWordAndTrailingPunct(token){
+      const match = token.match(/^(.+?)([.!?…]+)?$/);
+      if (!match) return { word: token, punct: "" };
+      return {
+        word: match[1] || "",
+        punct: match[2] || ""
+      };
+    }
+
+    function pushWordsFromChunk(arr, text, type){
+      const clean = text.replace(/\s+/g, " ").trim();
+      if (!clean) return;
+
+      const rawTokens = clean.split(" ");
+      rawTokens.forEach(token => {
+        const parts = splitWordAndTrailingPunct(token);
+        if (parts.word) {
+          arr.push({ text: parts.word, type });
+        }
+        if (parts.punct) {
+          arr.push({ text: parts.punct, type: null, punct: true });
+        }
+      });
+    }
+
+    function parseMarkedSentence(str){
+      const result = [];
+      let i = 0;
+
+      while (i < str.length) {
+        if (str.startsWith("<<", i)) {
+          const end = str.indexOf(">>", i);
+          if (end === -1) {
+            pushWordsFromChunk(result, str.slice(i), null);
+            break;
+          }
+          const content = str.slice(i + 2, end);
+          pushWordsFromChunk(result, content, "adv");
+          i = end + 2;
+        } else if (str[i] === "<") {
+          const end = str.indexOf(">", i);
+          if (end === -1) {
+            pushWordsFromChunk(result, str.slice(i), null);
+            break;
+          }
+          const content = str.slice(i + 1, end);
+          pushWordsFromChunk(result, content, "def");
+          i = end + 1;
+        } else {
+          let next = str.length;
+          const nextDef = str.indexOf("<", i);
+          if (nextDef !== -1) next = Math.min(next, nextDef);
+          const content = str.slice(i, next);
+          pushWordsFromChunk(result, content, null);
+          i = next;
+        }
+      }
+
+      return result;
+    }
+
+    function updateStats(){
+      scoreEl.textContent = score;
+      errorsEl.textContent = errors;
+    }
+
+    function createWord(item){
+      const span = document.createElement("span");
+      span.textContent = item.text;
+      span.className = "word";
+
+      if (item.punct) {
+        span.style.cursor = "default";
+        span.style.paddingLeft = "2px";
+        span.style.paddingRight = "2px";
+        span.style.marginLeft = "0";
+        span.style.marginRight = "0";
+        return span;
+      }
+
+      if (item.type) {
+        span.dataset.type = item.type;
+        totalTargets++;
+      }
+
+      span.addEventListener("click", () => {
+        if (span.classList.contains("done")) return;
+
+        const trueType = span.dataset.type || "";
+
+        if (trueType === mode) {
+          score++;
+          foundTargets++;
+          span.classList.add("done");
+          span.classList.add(mode === "def" ? "correct-def" : "correct-adv");
+        } else {
+          errors++;
+          span.classList.add("done", "wrong");
+        }
+
+        updateStats();
+      });
+
+      return span;
+    }
+
+    function render(){
+      quizEl.innerHTML = "";
+      totalTargets = 0;
+      foundTargets = 0;
+      topMessageEl.classList.remove("show", "ok");
+      topMessageEl.textContent = "";
+      finalEl.style.display = "none";
+      finalEl.textContent = "";
+
+      data.forEach(sentence => {
+        const box = document.createElement("div");
+        box.className = "sentence";
+
+        const items = parseMarkedSentence(sentence);
+
+        items.forEach((item, index) => {
+          const el = createWord(item);
+          box.appendChild(el);
+
+          const next = items[index + 1];
+          if (!next) return;
+
+          const currentIsPunct = !!item.punct;
+          const nextIsPunct = !!next.punct;
+
+          if (!currentIsPunct && !nextIsPunct) {
+            box.appendChild(document.createTextNode(" "));
+          }
+        });
+
+        quizEl.appendChild(box);
+      });
+
+      updateStats();
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Обособление</title>
+  <style>
+    :root{
+      --bg1:#071120;
+      --bg2:#0b1d38;
+      --panel:rgba(8,18,36,.88);
+      --stroke:rgba(255,255,255,.14);
+      --text:#eef6ff;
+      --muted:#a8bdd8;
+      --blue:#2388ff;
+      --shadow:0 16px 45px rgba(0,0,0,.35);
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family: Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 0%, #17345f 0%, transparent 50%),
+        radial-gradient(1000px 700px at 100% 20%, #122b50 0%, transparent 45%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
+    }
+
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .wrap{
+      width:min(1000px, 100%);
+    }
+
+    .hero{
+      background:var(--panel);
+      border:1px solid var(--stroke);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:52px 34px 42px;
+      text-align:center;
+      backdrop-filter: blur(8px);
+    }
+
+    h1{
+      margin:0 0 14px;
+      font-size:58px;
+      line-height:1.05;
+      font-weight:800;
+      letter-spacing:.5px;
+      text-shadow:0 0 18px rgba(120,190,255,.18);
+    }
+
+    .subtitle{
+      max-width:760px;
+      margin:0 auto 34px;
+      font-size:22px;
+      line-height:1.5;
+      color:var(--muted);
+    }
+
+    .menu{
+      display:flex;
+      justify-content:center;
+      margin-top:18px;
+    }
+
+    .menu-btn{
+      display:inline-block;
+      min-width:340px;
+      text-decoration:none;
+      border:none;
+      border-radius:20px;
+      padding:22px 28px;
+      font-size:28px;
+      font-weight:800;
+      color:#fff;
+      background:linear-gradient(180deg, #56a8ff, var(--blue));
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.16) inset,
+        0 12px 28px rgba(0,0,0,.28);
+      transition:.16s ease;
+    }
+
+    .menu-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,.22) inset,
+        0 14px 30px rgba(0,0,0,.32),
+        0 0 18px rgba(95,170,255,.22);
+    }
+
+    .note{
+      margin-top:26px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.5;
+    }
+
+    @media (max-width: 760px){
+      .hero{
+        padding:34px 20px 30px;
+      }
+
+      h1{
+        font-size:42px;
+      }
+
+      .subtitle{
+        font-size:18px;
+      }
+
+      .menu-btn{
+        min-width:100%;
+        font-size:22px;
+        padding:18px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Обособление</h1>
+
+      <p class="subtitle">
+        Интерактивные тренажёры по русскому языку.
+        Сейчас здесь доступен один тренажёр, позже можно будет добавить новые кнопки и новые упражнения.
+      </p>
+
+      <div class="menu">
+        <a class="menu-btn" href="opred_obst.html">Определений и обстоятельств</a>
+      </div>
+
+      <div class="note">
+        Это главная страница сайта. Позже сюда можно будет добавить другие разделы:
+        уточняющие конструкции, приложения, дополнения и другие тренажёры.
+      </div>
+    </section>
+  </div>
+</body>
+</html>
