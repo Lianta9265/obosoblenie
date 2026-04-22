@@ -11,8 +11,8 @@
       --panel:rgba(8,18,36,.88);
       --stroke:rgba(255,255,255,.14);
       --text:#eef6ff;
-      --muted:#a8bdd8;
       --blue:#2388ff;
+      --green:#18c76b;
       --shadow:0 16px 45px rgba(0,0,0,.35);
     }
 
@@ -41,7 +41,7 @@
     }
 
     .hero{
-      background:var(--panel);
+      background:rgba(8,18,36,.88);
       border:1px solid var(--stroke);
       border-radius:28px;
       box-shadow:var(--shadow);
@@ -51,7 +51,7 @@
     }
 
     h1{
-      margin:0 0 14px;
+      margin:0 0 28px;
       font-size:58px;
       line-height:1.05;
       font-weight:800;
@@ -59,18 +59,11 @@
       text-shadow:0 0 18px rgba(120,190,255,.18);
     }
 
-    .subtitle{
-      max-width:760px;
-      margin:0 auto 34px;
-      font-size:22px;
-      line-height:1.5;
-      color:var(--muted);
-    }
-
     .menu{
       display:flex;
       justify-content:center;
-      margin-top:18px;
+      flex-wrap:wrap;
+      gap:18px;
     }
 
     .menu-btn{
@@ -90,19 +83,16 @@
       transition:.16s ease;
     }
 
+    .menu-btn.green{
+      background:linear-gradient(180deg, #42e38f, var(--green));
+    }
+
     .menu-btn:hover{
       transform:translateY(-2px);
       box-shadow:
         0 0 0 2px rgba(255,255,255,.22) inset,
         0 14px 30px rgba(0,0,0,.32),
         0 0 18px rgba(95,170,255,.22);
-    }
-
-    .note{
-      margin-top:26px;
-      color:var(--muted);
-      font-size:16px;
-      line-height:1.5;
     }
 
     @media (max-width: 760px){
@@ -112,10 +102,6 @@
 
       h1{
         font-size:42px;
-      }
-
-      .subtitle{
-        font-size:18px;
       }
 
       .menu-btn{
@@ -131,16 +117,9 @@
     <section class="hero">
       <h1>Обособление</h1>
 
-      <p class="subtitle">
-        Интерактивные тренажёры по русскому языку.
-      </p>
-
       <div class="menu">
         <a class="menu-btn" href="opred_obst.html">Определений и обстоятельств</a>
-      </div>
-
-      <div class="note">
-        Выбери тренажёр.
+        <a class="menu-btn green" href="utochnyayushchie.html">Уточняющие</a>
       </div>
     </section>
   </div>
