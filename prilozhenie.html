@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Приложение — распределение по правилам</title>
+  <style>
+    :root{
+      --bg:#07111f;
+      --panel:rgba(9,18,35,.82);
+      --panel-2:rgba(14,27,52,.88);
+      --stroke:rgba(255,255,255,.16);
+      --text:#f5fbff;
+      --muted:#bdd3ea;
+      --good:#63ffb2;
+      --bad:#ff6b7a;
+      --accent:#7fe7ff;
+      --accent2:#ffd76f;
+      --shadow:0 18px 50px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(66,114,255,.18), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(0,255,200,.10), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(255,120,80,.10), transparent 28%),
+        var(--bg);
+      color:var(--text);
+      font-family:"Segoe UI", Arial, sans-serif;
+    }
+
+    body{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:18px;
+      gap:14px;
+    }
+
+    .hud{
+      width:min(1500px, 96vw);
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:14px;
+      align-items:start;
+    }
+
+    .stats{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .pill{
+      background:linear-gradient(180deg, rgba(16,32,60,.95), rgba(11,21,40,.95));
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      padding:10px 14px;
+      color:var(--text);
+      box-shadow:var(--shadow);
+      font-weight:700;
+      letter-spacing:.3px;
+    }
+
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      gap:10px;
+    }
+
+    button{
+      border:0;
+      border-radius:16px;
+      padding:12px 16px;
+      font-size:16px;
+      font-weight:800;
+      letter-spacing:.4px;
+      cursor:pointer;
+      color:#08131f;
+      background:linear-gradient(180deg, #9cf4ff, #69d7ff);
+      box-shadow:0 10px 24px rgba(0,0,0,.28);
+      transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    }
+
+    button:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.04);
+    }
+
+    button.secondary{
+      color:var(--text);
+      background:linear-gradient(180deg, rgba(28,47,86,.95), rgba(15,28,53,.95));
+      border:1px solid var(--stroke);
+    }
+
+    .game{
+      position:relative;
+      width:min(1500px, 96vw);
+      aspect-ratio:16 / 9;
+      border-radius:28px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 24px 70px rgba(0,0,0,.42);
+      background:#07111f;
+      user-select:none;
+    }
+
+    .board-image{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at center, rgba(0,0,0,.00) 0 22%, rgba(0,0,0,.14) 36%, rgba(0,0,0,.26) 100%);
+    }
+
+    .center-panel{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%, -50%);
+      width:min(660px, 78%);
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:26px;
+      padding:22px 24px 18px;
+      text-align:center;
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+      backdrop-filter:blur(8px);
+      z-index:5;
+    }
+
+    .task-title{
+      font-size:14px;
+      text-transform:uppercase;
+      letter-spacing:1.4px;
+      color:var(--accent2);
+      margin-bottom:10px;
+      font-weight:800;
+    }
+
+    .sentence{
+      font-size:clamp(20px, 2vw, 34px);
+      line-height:1.4;
+      font-weight:800;
+      color:#ffffff;
+      text-shadow:0 2px 10px rgba(0,0,0,.35);
+      min-height:118px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .hint{
+      margin-top:12px;
+      font-size:15px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+
+    .feedback{
+      margin-top:12px;
+      min-height:28px;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:1px;
+    }
+
+    .feedback.good{ color:var(--good); }
+    .feedback.bad{ color:var(--bad); }
+
+    .hotspot{
+      position:absolute;
+      width:14%;
+      aspect-ratio:1 / 1;
+      border-radius:50%;
+      transform:translate(-50%, -50%);
+      z-index:4;
+      cursor:pointer;
+      background:rgba(255,255,255,0);
+      border:2px solid rgba(255,255,255,0);
+      transition:transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+
+    .hotspot:hover{
+      transform:translate(-50%, -50%) scale(1.04);
+    }
+
+    .show-zones .hotspot{
+      background:rgba(127, 231, 255, .12);
+      border-color:rgba(127, 231, 255, .7);
+      box-shadow:0 0 0 3px rgba(127,231,255,.12) inset, 0 0 22px rgba(127,231,255,.22);
+    }
+
+    .hotspot.correct-flash{
+      background:rgba(99,255,178,.24) !important;
+      border-color:rgba(99,255,178,.95) !important;
+      box-shadow:0 0 26px rgba(99,255,178,.45) !important;
+    }
+
+    .hotspot.wrong-flash{
+      background:rgba(255,107,122,.20) !important;
+      border-color:rgba(255,107,122,.95) !important;
+      box-shadow:0 0 26px rgba(255,107,122,.45) !important;
+    }
+
+    .legend{
+      width:min(1500px, 96vw);
+      background:linear-gradient(180deg, rgba(13,24,46,.78), rgba(10,18,35,.86));
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      padding:14px 16px;
+      box-shadow:var(--shadow);
+    }
+
+    .legend-title{
+      font-weight:900;
+      color:var(--accent2);
+      margin-bottom:10px;
+      letter-spacing:.5px;
+    }
+
+    .legend-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
+      gap:10px 14px;
+    }
+
+    .legend-item{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+      padding:8px 10px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .final-screen{
+      position:absolute;
+      inset:0;
+      display:none;
+      place-items:center;
+      z-index:9;
+      background:rgba(4,10,20,.76);
+      backdrop-filter:blur(6px);
+    }
+
+    .final-screen.show{
+      display:grid;
+    }
+
+    .final-card{
+      width:min(700px, 88%);
+      background:linear-gradient(180deg, rgba(13,25,48,.96), rgba(8,16,32,.97));
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:28px;
+      box-shadow:0 24px 70px rgba(0,0,0,.45);
+      padding:26px;
+      text-align:center;
+    }
+
+    .final-card h2{
+      margin:0 0 10px;
+      font-size:34px;
+      color:#fff;
+    }
+
+    .final-result{
+      font-size:22px;
+      line-height:1.5;
+      color:var(--muted);
+      margin-bottom:18px;
+      font-weight:700;
+    }
+
+    .final-card .buttons{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    @media (max-width: 900px){
+      .hud{
+        grid-template-columns:1fr;
+      }
+
+      .controls{
+        justify-content:flex-start;
+      }
+
+      .center-panel{
+        width:min(720px, 86%);
+        padding:18px;
+      }
+
+      .sentence{
+        min-height:134px;
+        font-size:clamp(18px, 3.3vw, 28px);
+      }
+
+      .hotspot{
+        width:15.5%;
+      }
+    }
+
+    @media (max-width: 640px){
+      body{ padding:10px; }
+      .pill{ font-size:14px; }
+      button{ font-size:14px; padding:10px 12px; }
+      .center-panel{ width:88%; }
+      .hotspot{ width:16.5%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hud">
+    <div class="stats">
+      <div class="pill" id="scorePill">Верно: 0</div>
+      <div class="pill" id="errorPill">Ошибки: 0</div>
+      <div class="pill" id="leftPill">Осталось: 0</div>
+      <div class="pill" id="totalPill">Всего: 0</div>
+    </div>
+
+    <div class="controls">
+      <button id="startBtn">СТАРТ</button>
+      <button class="secondary" id="resetBtn">СБРОС</button>
+      <button class="secondary" id="zonesBtn">ПОКАЗАТЬ ЗОНЫ</button>
+    </div>
+  </div>
+
+  <div class="game" id="game">
+    <img src="prilozhenie.jpg" alt="Схема правил" class="board-image" />
+    <div class="overlay"></div>
+
+    <!-- 10 одинаковых зон по овалу -->
+    <div class="hotspot" data-zone="dash_end"      style="left:15.5%; top:22%;"></div>
+    <div class="hotspot" data-zone="pronoun"       style="left:36.5%; top:14.5%;"></div>
+    <div class="hotspot" data-zone="proper_name"   style="left:63%; top:14.5%;"></div>
+    <div class="hotspot" data-zone="after_defined" style="left:85%; top:22%;"></div>
+    <div class="hotspot" data-zone="hyphen_common" style="left:87%; top:52%;"></div>
+    <div class="hotspot" data-zone="no_isolation"  style="left:79.5%; top:79%;"></div>
+    <div class="hotspot" data-zone="reason_conc"   style="left:60.5%; top:84%;"></div>
+    <div class="hotspot" data-zone="kak_cause"     style="left:40%; top:85.5%;"></div>
+    <div class="hotspot" data-zone="kak_as_role"   style="left:19%; top:76%;"></div>
+    <div class="hotspot" data-zone="clarification" style="left:10%; top:51%;"></div>
+
+    <div class="center-panel">
+      <div class="task-title">Определи правило приложения</div>
+      <div class="sentence" id="sentenceBox">Нажми «СТАРТ», и пример появится здесь.</div>
+      <div class="hint" id="hintBox">Прочитай предложение и нажми на нужную область на схеме.</div>
+      <div class="feedback" id="feedbackBox"></div>
+    </div>
+
+    <div class="final-screen" id="finalScreen">
+      <div class="final-card">
+        <h2>Миссия завершена!</h2>
+        <div class="final-result" id="finalResult"></div>
+        <div class="buttons">
+          <button id="restartBtn">СЫГРАТЬ ЕЩЁ РАЗ</button>
+          <button class="secondary" id="closeFinalBtn">ЗАКРЫТЬ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-title">Категории в коде</div>
+    <div class="legend-grid">
+      <div class="legend-item"><b>dash_end</b> — тире в конце фразы</div>
+      <div class="legend-item"><b>pronoun</b> — Х = личное местоимение</div>
+      <div class="legend-item"><b>proper_name</b> — после Х-слова, имени собственного</div>
+      <div class="legend-item"><b>after_defined</b> — после Х-слова: П или Х с зависимыми словами</div>
+      <div class="legend-item"><b>hyphen_common</b> — дефис: П и Х-слово — одиночные нарицательные</div>
+      <div class="legend-item"><b>no_isolation</b> — не обособляем перед Х-словом</div>
+      <div class="legend-item"><b>reason_conc</b> — значение причины или уступки</div>
+      <div class="legend-item"><b>kak_cause</b> — КАК со значением причины = будучи</div>
+      <div class="legend-item"><b>kak_as_role</b> — КАК = в качестве</div>
+      <div class="legend-item"><b>clarification</b> — уточнение</div>
+    </div>
+  </div>
+
+  <script>
+    const allTasks = [
+      // 1. Х — личное местоимение
+      {
+        text: "Ему ли, карлику, тягаться с исполином?",
+        zone: "pronoun"
+      },
+      {
+        text: "Но он, новичок, выбрал самую последнюю парту.",
+        zone: "pronoun"
+      },
+      {
+        text: "Им, гагарам, недоступно наслажденье битвой жизни.",
+        zone: "pronoun"
+      },
+
+      // 2. После Х-слова — имени собственного
+      {
+        text: "За советом к Степану, местному пастуху, обращайтесь.",
+        zone: "proper_name"
+      },
+      {
+        text: "У Ивана Петровича, библиотекаря школы, мы раздобыли немного такого клея.",
+        zone: "proper_name"
+      },
+      {
+        text: "Мы были в гостях у Маши, молодой художницы.",
+        zone: "proper_name"
+      },
+
+      // 3. После Х-слова (П или Х с зависимыми словами)
+      {
+        text: "Старик, наш сосед по даче, зашёл поздороваться.",
+        zone: "after_defined"
+      },
+      {
+        text: "Его друг, великий английский учёный, создал теорию эволюции.",
+        zone: "after_defined"
+      },
+      {
+        text: "Этот мальчишка, местный пастух, знал все лесные тропы.",
+        zone: "after_defined"
+      },
+
+      // 4. Значение причины или уступки
+      {
+        text: "Упрямец во всём, отец и тут не уступил.",
+        zone: "reason_conc"
+      },
+      {
+        text: "Опытный врач, дедушка сразу поставил верный диагноз.",
+        zone: "reason_conc"
+      },
+      {
+        text: "Человек осторожный, лесник всё же рискнул войти первым.",
+        zone: "reason_conc"
+      },
+
+      // 5. КАК (причина) = будучи
+      {
+        text: "Этой картине, как шедевру живописи, выделили отдельный зал.",
+        zone: "kak_cause"
+      },
+      {
+        text: "Братишке, как любопытному мальчику, трудно было не открыть эту шкатулку.",
+        zone: "kak_cause"
+      },
+      {
+        text: "Рыжему, как новичку, многое прощали.",
+        zone: "kak_cause"
+      },
+
+      // 6. Уточнение
+      {
+        text: "Один из братьев, по прозвищу Торнадо, был самым задиристым.",
+        zone: "clarification"
+      },
+      {
+        text: "Его брат, по профессии инженер, часто уезжал в командировки.",
+        zone: "clarification"
+      },
+      {
+        text: "Эта кудрявая брюнетка, латиноамериканка по происхождению, привлекала внимание.",
+        zone: "clarification"
+      },
+
+      // 7. Тире (в конце фразы)
+      {
+        text: "На столе красовалась инкрустированная самоцветами шкатулка — работа неизвестного мастера.",
+        zone: "dash_end"
+      },
+      {
+        text: "В комнате стоял старый стол — семейная реликвия.",
+        zone: "dash_end"
+      },
+      {
+        text: "Вдали показалась точка — приближающийся корабль.",
+        zone: "dash_end"
+      },
+
+      // 8. Дефис (П и Х-слово — одиночные нарицательные)
+      {
+        text: "Зима-волшебница укрыла землю снегом.",
+        zone: "hyphen_common"
+      },
+      {
+        text: "Город-герой встречал гостей.",
+        zone: "hyphen_common"
+      },
+      {
+        text: "Учитель-новатор разработал план открытого урока.",
+        zone: "hyphen_common"
+      },
+
+      // 9. Не обособляем перед Х (без дополнительных причин)
+      {
+        text: "Заядлый охотник Емеля вызвался показать нам ту тропинку.",
+        zone: "no_isolation"
+      },
+      {
+        text: "Старший брат Андрей уехал в Москву.",
+        zone: "no_isolation"
+      },
+      {
+        text: "Учитель математики Петр Сергеевич уже объяснял нам эту тему.",
+        zone: "no_isolation"
+      },
+
+      // 10. КАК = в качестве
+      {
+        text: "Мы знаем Ломоносова как великого учёного, но он ещё и стихи писал.",
+        zone: "kak_as_role"
+      },
+      {
+        text: "Отца там приняли как специалиста высокого уровня.",
+        zone: "kak_as_role"
+      },
+      {
+        text: "Прими это как шутку и не обижайся.",
+        zone: "kak_as_role"
+      }
+    ];
+
+    let tasks = [];
+    let currentIndex = -1;
+    let score = 0;
+    let errors = 0;
+    let started = false;
+    let locked = false;
+
+    const sentenceBox = document.getElementById("sentenceBox");
+    const hintBox = document.getElementById("hintBox");
+    const feedbackBox = document.getElementById("feedbackBox");
+
+    const scorePill = document.getElementById("scorePill");
+    const errorPill = document.getElementById("errorPill");
+    const leftPill = document.getElementById("leftPill");
+    const totalPill = document.getElementById("totalPill");
+
+    const startBtn = document.getElementById("startBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const zonesBtn = document.getElementById("zonesBtn");
+    const game = document.getElementById("game");
+
+    const finalScreen = document.getElementById("finalScreen");
+    const finalResult = document.getElementById("finalResult");
+    const restartBtn = document.getElementById("restartBtn");
+    const closeFinalBtn = document.getElementById("closeFinalBtn");
+
+    const hotspots = [...document.querySelectorAll(".hotspot")];
+
+    function shuffle(array){
+      const arr = [...array];
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function updateStats(){
+      scorePill.textContent = `Верно: ${score}`;
+      errorPill.textContent = `Ошибки: ${errors}`;
+      totalPill.textContent = `Всего: ${tasks.length}`;
+      const left = started && currentIndex >= 0 ? Math.max(tasks.length - currentIndex - 1, 0) : tasks.length;
+      leftPill.textContent = `Осталось: ${left}`;
+    }
+
+    function clearFlashes(){
+      hotspots.forEach(h => {
+        h.classList.remove("correct-flash", "wrong-flash");
+      });
+    }
+
+    function showTask(){
+      clearFlashes();
+      feedbackBox.textContent = "";
+      feedbackBox.className = "feedback";
+
+      if(currentIndex >= tasks.length){
+        showFinal();
+        return;
+      }
+
+      const task = tasks[currentIndex];
+      sentenceBox.textContent = task.text;
+      hintBox.textContent = "Нажми на ту область схемы, к которой относится это предложение.";
+      updateStats();
+    }
+
+    function startGame(){
+      tasks = shuffle(allTasks);
+      currentIndex = 0;
+      score = 0;
+      errors = 0;
+      started = true;
+      locked = false;
+      finalScreen.classList.remove("show");
+      showTask();
+    }
+
+    function resetGame(){
+      started = false;
+      locked = false;
+      tasks = [];
+      currentIndex = -1;
+      score = 0;
+      errors = 0;
+      sentenceBox.textContent = "Нажми «СТАРТ», и пример появится здесь.";
+      hintBox.textContent = "Прочитай предложение и нажми на нужную область на схеме.";
+      feedbackBox.textContent = "";
+      feedbackBox.className = "feedback";
+      clearFlashes();
+      finalScreen.classList.remove("show");
+      updateStats();
+    }
+
+    function zoneTitle(zoneId){
+      const names = {
+        dash_end: "Тире в конце фразы",
+        pronoun: "Х — личное местоимение",
+        proper_name: "После Х-слова — имени собственного",
+        after_defined: "После Х-слова: П или Х с зависимыми словами",
+        hyphen_common: "Дефис: П и Х-слово — одиночные нарицательные",
+        no_isolation: "Не обособляем перед Х-словом",
+        reason_conc: "Значение причины или уступки",
+        kak_cause: "КАК со значением причины",
+        kak_as_role: "КАК = в качестве",
+        clarification: "Уточнение"
+      };
+      return names[zoneId] || zoneId;
+    }
+
+    function handleAnswer(chosenZone, hotspotElement){
+      if(!started || locked) return;
+
+      const task = tasks[currentIndex];
+      const isCorrect = chosenZone === task.zone;
+      locked = true;
+
+      clearFlashes();
+
+      if(isCorrect){
+        score++;
+        hotspotElement.classList.add("correct-flash");
+        feedbackBox.textContent = "ВЕРНО";
+        feedbackBox.className = "feedback good";
+      } else {
+        errors++;
+        hotspotElement.classList.add("wrong-flash");
+        const correctHotspot = hotspots.find(h => h.dataset.zone === task.zone);
+        if(correctHotspot) correctHotspot.classList.add("correct-flash");
+        feedbackBox.textContent = `НЕВЕРНО · нужно: ${zoneTitle(task.zone)}`;
+        feedbackBox.className = "feedback bad";
+      }
+
+      updateStats();
+
+      setTimeout(() => {
+        currentIndex++;
+        locked = false;
+        showTask();
+      }, 1300);
+    }
+
+    function showFinal(){
+      sentenceBox.textContent = "Все предложения распределены.";
+      hintBox.textContent = "Можно сыграть ещё раз.";
+      feedbackBox.textContent = "";
+      feedbackBox.className = "feedback";
+
+      const percent = tasks.length ? Math.round((score / tasks.length) * 100) : 0;
+      finalResult.innerHTML = `
+        Верно: <b>${score}</b><br>
+        Ошибки: <b>${errors}</b><br>
+        Результат: <b>${percent}%</b>
+      `;
+      finalScreen.classList.add("show");
+      updateStats();
+    }
+
+    hotspots.forEach(hotspot => {
+      hotspot.addEventListener("click", () => {
+        handleAnswer(hotspot.dataset.zone, hotspot);
+      });
+    });
+
+    startBtn.addEventListener("click", startGame);
+    resetBtn.addEventListener("click", resetGame);
+
+    zonesBtn.addEventListener("click", () => {
+      game.classList.toggle("show-zones");
+      zonesBtn.textContent = game.classList.contains("show-zones")
+        ? "СКРЫТЬ ЗОНЫ"
+        : "ПОКАЗАТЬ ЗОНЫ";
+    });
+
+    restartBtn.addEventListener("click", startGame);
+    closeFinalBtn.addEventListener("click", () => {
+      finalScreen.classList.remove("show");
+    });
+
+    updateStats();
+  </script>
+</body>
+</html>
